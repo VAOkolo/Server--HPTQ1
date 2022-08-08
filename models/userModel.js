@@ -9,8 +9,8 @@ const userSchema = new Schema({
     },
     scores: {
         type: Number,
-        required: false
+        required: true
     }
 }, {timestamps: true})
 
-module.exports = mongoose.model('Users', userSchema)
+module.exports = mongoose.model('User', userSchema)

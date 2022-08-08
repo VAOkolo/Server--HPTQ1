@@ -1,4 +1,4 @@
-const Users = require('../server_hptq/models/userModel')
+const Users = require('./models/userModel')
 
 const seedUsers = [
     {

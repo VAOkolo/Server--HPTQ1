@@ -1,5 +1,4 @@
 const User = require('../models/userModel')
-const mongoose = require('mongoose')
 
 
 const getUsers = async (req, res) => {

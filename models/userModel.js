@@ -9,7 +9,7 @@ const userSchema = new Schema({
     },
     scores: {
         type: Number,
-        required: false
+        required: true
     }
 }, {timestamps: true})
 

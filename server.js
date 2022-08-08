@@ -6,6 +6,7 @@ const cors = require("cors");
 require('dotenv').config()
 
 const PORT = process.env.PORT || 8000
+// const PORT = 8000;
 
 const server = http.createServer(app);
 
@@ -39,8 +40,6 @@ mongoose.connect(process.env.MONG_URI)
     .catch((error) => {
         console.log(error)
     })
-
-
 
 const io = new Server(server, {
   cors: {

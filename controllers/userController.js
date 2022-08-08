@@ -9,10 +9,10 @@ const getUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
 
-    const { username, score } = req.body
+    const { username, scores } = req.body
 
     try {
-        const user = await User.create({username, score})
+        const user = await User.create({username, scores})
         console.log(user)
         res.status(200).json(user)
     } catch (error) {

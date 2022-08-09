@@ -5,15 +5,6 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
 
-const PORT = process.env.PORT || 8000;
-// const PORT = 8000;
-
-const server = http.createServer(app);
-
-//db
-const mongoose = require("mongoose");
-const { seedDB } = require("./seeds");
-
 app.use(cors());
 app.use(express.json());
 
@@ -25,22 +16,7 @@ app.get("/", (req, res) => {
   res.send("HPTQ API");
 });
 
-// app.listen(process.env.PORT, () => {
-//     console.log("Connected to db & listening at port " + process.env.PORT)
-// })
-mongoose
-  .connect(process.env.MONG_URI)
-  // .then(() => {
-  //     seedDB()
-  // })
-  .then(() => {
-    server.listen(PORT, () => {
-      console.log("Connected to db & listening at port " + PORT);
-    });
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
@@ -78,3 +54,5 @@ io.on("connection", (socket) => {
     console.log("join room", data, "userid", socket.id);
   });
 });
+
+module.exports = server

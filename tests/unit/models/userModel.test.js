@@ -1,80 +1,64 @@
-const request = require('supertest');
-const Habit = require('../../../models/habits')
-const mongodb = require('mongodb');
-jest.mock('mongodb')
-const db = require('../../../dbconfig')
+const mongoose = require('mongoose')
+const mongoDB = "mongodb+srv://testdb:testdb@testdb.stugjxi.mongodb.net/?retryWrites=true&w=majority"
+const User = require('../../../models/userModel')
+jest.setTimeout(30000);
 
-describe('Habit', () => {
-    let api
-    beforeEach(() => jest.clearAllMocks())
+const connectDB = () => mongoose.connect(mongoDB)
+let db; 
 
-    afterAll(() => jest.resetAllMocks())
+//simply testing that the model works appropriately
+describe("User model test", () => {
+    beforeAll(async () => {
+        db = await connectDB()
+        await User.deleteMany({});
+    })
 
-    describe('all', () => {
-        // it('should get all users', () => {
-        //     jest.setTimeout(() => {
-        //         const res = request(api).post('/')
-        //         expect(res.statusCode).toEqual(200)
-        //     }, 10000)
-        // })
+    afterEach(async () => {
+        await User.deleteMany({});   
+    })
 
-    });
+    afterAll(async () => {
+        await mongoose.connection.close();
+    })
 
-    describe('create', () => {
-        it('create new habit', () => {
-            jest.setTimeout(() => {
-                const res = request(api).post('/')
-                expect(res.statusCode).toEqual(200)
-            }, 10000)
+    it("has a module", () => {
+        expect(User).toBeDefined();
+    })
+
+    describe("get users", () => {
+        it("gets users", async () => {
+            const user = new User({username: "test12345", scores: 5000})
+            await user.save();
+
+            const foundUser = await User.findOne({name: "test12345"})
+            const expected = "test12345"
+            const actual = foundUser.username;
+            expect(actual).toEqual(expected)
         })
-        // test('it creates a new habit', async () => {
-        //     const newHabit = await (await request(api).post('/')).send({
-        //         content: "running", email: "vincent@gmail.com", dates: [{date: "2022-18-22", complete: "yes"}, {date: "2022-18-22",complete: "no"}, {date: "2022-18-22", complete: "yes"}]})
-        //         expect(res.text.toString()).toContain('Habit was created')
-        // })
-    });
+    })
 
-    describe('findByEmail', () => {
-        it('return habits via email', () => {
-            jest.setTimeout(() => {
-                const res = request(api).post('/')
-                expect(res.statusCode).toEqual(200)
-            }, 10000)
+    describe("save users", () => {
+        it("saves a user", async () => {
+            const user = new User({username: "test12345", scores: 5000})
+            const savedUser = await user.save();
+            const expected = "test12345"
+            const actual = savedUser.username;
+            expect(actual).toEqual(expected)
         })
-    });
+    })
 
-    describe('findByHabit', () => {
-        it('finds habit', () => {
-            jest.setTimeout(() => {
-                const res = request(api).post('/')
-                expect(res.statusCode).toEqual(200)
-            }, 10000)
-        })
-    });
+    describe("update users", () => {
+        it("updates a user", async () => {
+            const user = new User({username: "test12345", scores: 5000})
+            await user.save()
 
-    describe('update', () => {
-        it('updates a habit', () => {
-            jest.setTimeout(() => {
-                const res = request(api).post('/')
-                expect(res.statusCode).toEqual(200)
-            }, 10000)
-        })
-    });
+            user.username = "test123"
+            const updatedUser = await user.save();
 
-    describe('destroy', () => {
-        it('deletes a habit', () => {
-            jest.setTimeout(() => {
-                const res = request(api).post('/')
-                expect(res.statusCode).toEqual(200)
-            }, 10000)
+            const expected = "test123"
+            const actual = updatedUser.username;
+            expect(actual).toEqual(expected)
         })
-        // test('it delets a habit', async () => {
-        //     jest.setTimeout(db, 'habits')
-        //         .mockResolvedValueOnce({ id: 1 });
-        //     let testHabit = new Habit({ id: 1})
-        //     const result = await testHabit.destroy();
-        //     expect(result).toBe('Habit is deleted')
-        // })
-    });
+    })
+
 })
-

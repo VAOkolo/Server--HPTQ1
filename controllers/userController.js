@@ -2,7 +2,8 @@ const User = require('../models/userModel')
 
 
 const getUsers = async (req, res) => {
-    const Users = await User.find({}).sort({createdAt:-1})
+    const Users = await User.find()
+    // .sort({createdAt:-1})
 
     res.status(200).json(Users)
 }
@@ -22,9 +23,11 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
 
+    const { id } = req.params
+
     const user = await User.findOneAndUpdate({_id: id}, {...req.body})
 
-    res.status(200).json(user)
+    res.status(204).json(user)
 }
 
 module.exports = { getUsers, updateUser, createUser }

@@ -5,7 +5,7 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 4000;
 // const PORT = 8000;
 
 const server = http.createServer(app);
@@ -25,22 +25,19 @@ app.get("/", (req, res) => {
   res.send("HPTQ API");
 });
 
-// app.listen(process.env.PORT, () => {
-//     console.log("Connected to db & listening at port " + process.env.PORT)
-// })
-mongoose
-  .connect(process.env.MONG_URI)
-  // .then(() => {
-  //     seedDB()
-  // })
-  .then(() => {
-    server.listen(PORT, () => {
-      console.log("Connected to db & listening at port " + PORT);
-    });
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+// mongoose
+//   .connect(process.env.MONG_URI)
+//   // .then(() => {
+//   //     seedDB()
+//   // })
+//   .then(() => {
+//     server.listen(PORT, () => {
+//       console.log("Connected to db & listening at port " + PORT);
+//     });
+//   })
+//   .catch((error) => {
+//     console.log(error);
+//   });
 
 const io = new Server(server, {
   cors: {
@@ -53,6 +50,7 @@ io.on("connection", (socket) => {
   console.log("user conneted", socket.id);
 
   socket.on("send_message", (data, room) => {
+    console.log(room);
     socket.to(room).emit("recieved_message", data, socket.id);
     console.log(data);
   });
@@ -62,9 +60,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_canvas", (data, room) => {
-    console.log("socket io room :", room);
-    console.log("canvas ..data..sending data");
-
     socket.to(room).emit("recieved_canvas", data);
     socket.to(room).emit("recieved_id", socket.id);
   });
@@ -73,8 +68,14 @@ io.on("connection", (socket) => {
     socket.to(room).emit("refreshed_canvas", data);
   });
 
-  socket.on("join_room", (data) => {
-    socket.join(data);
-    console.log("join room", data, "userid", socket.id);
+  socket.on("join_room", (userName, availablePlayers, room) => {
+    socket.join(room);
+    socket.to(room).emit("players_in_room", availablePlayers);
+    console.log(`Users in this current room are ${availablePlayers}`);
+    console.log(`User: ${userName} joined room ${room}`);
   });
+});
+
+server.listen(PORT, () => {
+  console.log("Connected to db & listening at port " + PORT);
 });

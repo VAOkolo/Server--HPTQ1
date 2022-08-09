@@ -6,11 +6,9 @@ const cors = require("cors");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 4000;
-// const PORT = 8000;
 
 const server = http.createServer(app);
 
-//db
 const mongoose = require("mongoose");
 const { seedDB } = require("./seeds");
 
@@ -46,6 +44,8 @@ const io = new Server(server, {
   },
 });
 
+const users = [];
+
 io.on("connection", (socket) => {
   console.log("user conneted", socket.id);
 
@@ -68,11 +68,11 @@ io.on("connection", (socket) => {
     socket.to(room).emit("refreshed_canvas", data);
   });
 
-  socket.on("join_room", (userName, availablePlayers, room) => {
+  socket.on("join_room", (player, room) => {
     socket.join(room);
-    socket.to(room).emit("players_in_room", availablePlayers);
-    console.log(`Users in this current room are ${availablePlayers}`);
-    console.log(`User: ${userName} joined room ${room}`);
+    users.push(player);
+    let usersInCurrentRoom = users.filter((user) => user.room === room);
+    io.to(room).emit("room_data", usersInCurrentRoom);
   });
 });
 

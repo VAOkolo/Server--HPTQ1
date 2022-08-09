@@ -69,9 +69,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join_room", (player, room) => {
+    console.log(room);
     socket.join(room);
     users.push(player);
+    console.log(users);
     let usersInCurrentRoom = users.filter((user) => user.room === room);
+    console.log(usersInCurrentRoom);
     io.to(room).emit("room_data", usersInCurrentRoom);
   });
 });

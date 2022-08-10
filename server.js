@@ -86,11 +86,30 @@ io.on("connection", (socket) => {
     socket.to(room).emit("refreshed_canvas", data);
   });
 
+  socket.on("send_time_up", (room) => {
+    console.log("send time up", room);
+    // socket.to(room).emit("receive_time_up")
+    currentRoom = room;
+    usersInCurrentRoom = getUsersInRoom(currentRoom);
+    io.to(room).emit("receive_time_up", usersInCurrentRoom);
+    socket.broadcast.to(room).emit("make_all_other_turns_false");
+  });
+
   socket.on("join_room", (player, room) => {
+    console.log(player);
     users.push(player);
     player.id = socket.id;
     currentRoom = room;
     usersInCurrentRoom = getUsersInRoom(currentRoom);
+
+    usersInCurrentRoom.forEach((element, i) => {
+      if (i >= 1) {
+        element.host = false;
+      }
+    });
+
+    console.log("users in current room:", usersInCurrentRoom);
+    // console.log(`users currently in room ${room}:`);
     if (!rooms.find((obj) => obj.roomNumber == room)) {
       rooms.push({
         roomNumber: room,

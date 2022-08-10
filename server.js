@@ -45,9 +45,19 @@ const io = new Server(server, {
 });
 
 const users = [];
+let usersInCurrentRoom;
+let currentRoom;
 
 io.on("connection", (socket) => {
   console.log("user conneted", socket.id);
+
+  const getUsersInRoom = (room) => {
+    return users.filter((user) => user.room === room);
+  };
+
+  const getUsersAfterDisconnect = (room, id) => {
+    return users.filter((user) => user.room === room && user.id !== id);
+  };
 
   socket.on("send_message", (data, room) => {
     console.log(room);
@@ -69,13 +79,22 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join_room", (player, room) => {
-    console.log(room);
     socket.join(room);
     users.push(player);
-    console.log(users);
-    let usersInCurrentRoom = users.filter((user) => user.room === room);
-    console.log(usersInCurrentRoom);
+    player.id = socket.id;
+    currentRoom = room;
+    usersInCurrentRoom = getUsersInRoom(currentRoom);
     io.to(room).emit("room_data", usersInCurrentRoom);
+  });
+
+  socket.on("start_game", (room) => {
+    socket.to(room).emit("redirect_start_game");
+  });
+
+  socket.on("disconnect", () => {
+    usersAfterDisconnect = getUsersAfterDisconnect(currentRoom, socket.id);
+    console.log("Users after disc:", usersAfterDisconnect);
+    io.to(currentRoom).emit("room_data", usersAfterDisconnect);
   });
 });
 

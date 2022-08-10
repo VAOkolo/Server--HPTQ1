@@ -45,6 +45,8 @@ const io = new Server(server, {
 });
 
 const users = [];
+let rooms = [];
+// let activeRooms = [];
 let usersInCurrentRoom;
 let currentRoom;
 
@@ -88,20 +90,41 @@ io.on("connection", (socket) => {
     users.push(player);
     player.id = socket.id;
     currentRoom = room;
-    console.log("gameState Of Current Room Is:", roomState.gameState);
     usersInCurrentRoom = getUsersInRoom(currentRoom);
-    if (usersInCurrentRoom.length <= 2 || roomState.gameState == "false") {
-      socket.join(room);
-      console.log(`user ${player.username} joined room ${room}`);
-      io.to(room).emit("room_data", usersInCurrentRoom);
-      socket.emit("accept_connection");
-      console.log("THERE ARE 5 USERS IN THE ROOM");
-    } else {
-      socket.emit("refuse_connection");
+    if (!rooms.find((obj) => obj.roomNumber == room)) {
+      rooms.push({
+        roomNumber: room,
+        players: usersInCurrentRoom,
+        gameState: false,
+      });
+    }
+
+    console.log("all rooms:", rooms);
+
+    for (let i = rooms.length - 1; i >= 0; i--) {
+      console.log("room it is looping through currently:", rooms[i]);
+      if (rooms[i].gameState == false) {
+        if (usersInCurrentRoom.length <= 2) {
+          socket.join(room);
+          console.log(`user ${player.username} joined room ${room}`);
+          io.to(room).emit("room_data", usersInCurrentRoom);
+          socket.emit("accept_connection");
+          return;
+        } else {
+          console.log("CONNECTION REFUSED!");
+          socket.emit("refuse_connection");
+        }
+      }
+
+      if (rooms[i].gameState == true) {
+        socket.emit("refuse_connection");
+      }
     }
   });
 
   socket.on("start_game", (room) => {
+    rooms = rooms.filter((obj) => obj.roomNumber == room);
+    rooms.forEach((room) => (room.gameState = true));
     socket.to(room).emit("redirect_start_game", room);
   });
 

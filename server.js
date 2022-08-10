@@ -49,6 +49,7 @@ let rooms = [];
 // let activeRooms = [];
 let usersInCurrentRoom;
 let currentRoom;
+let count = 0
 
 io.on("connection", (socket) => {
   // console.log("user conneted", socket.id);
@@ -87,20 +88,47 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_time_up", (room) => {
+ console.log('************************************')
+        console.log('************************************')
+        console.log('count:', count)
+        console.log('************************************')
+        console.log('************************************')
+
+   
     console.log("send time up", room);
     // socket.to(room).emit("receive_time_up")
     currentRoom = room;
     usersInCurrentRoom = getUsersInRoom(currentRoom);
+     usersInCurrentRoom.forEach((user, i) => {
+      // console.log('start of for each', user, i, count)
+      if(i === count) {
+        user.active = true;
+      } else {
+        user.active = false
+      }
+        console.log('inside for each', user.username, 'i', i, user.active)
+     })
+
+    if(count < usersInCurrentRoom.length -1 ){
+          count++
+        } else {
+          count = 0
+        }
+       
+
+    // console.log('user in current room', usersInCurrentRoom)
     io.to(room).emit("receive_time_up", usersInCurrentRoom);
-    socket.broadcast.to(room).emit("make_all_other_turns_false");
+    socket.to(room).emit("make_all_other_turns_false");
   });
 
   socket.on("join_room", (player, room) => {
-    console.log(player);
+    console.log('join roo player:',player);
     users.push(player);
     player.id = socket.id;
     currentRoom = room;
     usersInCurrentRoom = getUsersInRoom(currentRoom);
+
+     io.to(room).emit("player_data", player);
 
     usersInCurrentRoom.forEach((element, i) => {
       if (i >= 1) {
@@ -123,10 +151,11 @@ io.on("connection", (socket) => {
     for (let i = rooms.length - 1; i >= 0; i--) {
       console.log("room it is looping through currently:", rooms[i]);
       if (rooms[i].gameState == false) {
-        if (usersInCurrentRoom.length <= 2) {
+        if (usersInCurrentRoom.length <= 4) {
           socket.join(room);
           console.log(`user ${player.username} joined room ${room}`);
           io.to(room).emit("room_data", usersInCurrentRoom);
+     
           socket.emit("accept_connection");
           return;
         } else {

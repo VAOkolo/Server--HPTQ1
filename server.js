@@ -86,7 +86,7 @@ io.on("connection", (socket) => {
     socket.to(room).emit("refreshed_canvas", data);
   });
 
-  socket.on("join_room", (player, room, roomState) => {
+  socket.on("join_room", (player, room) => {
     users.push(player);
     player.id = socket.id;
     currentRoom = room;

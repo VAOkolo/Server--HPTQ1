@@ -49,11 +49,17 @@ let usersInCurrentRoom;
 let currentRoom;
 
 io.on("connection", (socket) => {
-  console.log("user conneted", socket.id);
+  // console.log("user conneted", socket.id);
 
   const getUsersInRoom = (room) => {
     return users.filter((user) => user.room === room);
   };
+
+  // const checkUsersInRoom = () => {
+  //   if (usersInCurrentRoom.length === 2) {
+  //     console.log("THERE ARE 5 USERS IN THE ROOM");
+  //   }
+  // };
 
   const getUsersAfterDisconnect = (room, id) => {
     return users.filter((user) => user.room === room && user.id !== id);
@@ -78,23 +84,31 @@ io.on("connection", (socket) => {
     socket.to(room).emit("refreshed_canvas", data);
   });
 
-  socket.on("join_room", (player, room) => {
-    socket.join(room);
+  socket.on("join_room", (player, room, roomState) => {
     users.push(player);
     player.id = socket.id;
     currentRoom = room;
+    console.log("gameState Of Current Room Is:", roomState.gameState);
     usersInCurrentRoom = getUsersInRoom(currentRoom);
-    io.to(room).emit("room_data", usersInCurrentRoom);
+    if (usersInCurrentRoom.length <= 2 || roomState.gameState == "false") {
+      socket.join(room);
+      console.log(`user ${player.username} joined room ${room}`);
+      io.to(room).emit("room_data", usersInCurrentRoom);
+      socket.emit("accept_connection");
+      console.log("THERE ARE 5 USERS IN THE ROOM");
+    } else {
+      socket.emit("refuse_connection");
+    }
   });
 
   socket.on("start_game", (room) => {
-    socket.to(room).emit("redirect_start_game");
+    socket.to(room).emit("redirect_start_game", room);
   });
 
   socket.on("disconnect", () => {
     usersAfterDisconnect = getUsersAfterDisconnect(currentRoom, socket.id);
-    console.log("Users after disc:", usersAfterDisconnect);
-    io.to(currentRoom).emit("room_data", usersAfterDisconnect);
+    // console.log("Users after disc:", usersAfterDisconnect);
+    // io.to(currentRoom).emit("room_data", usersAfterDisconnect);
   });
 });
 

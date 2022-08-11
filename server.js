@@ -108,10 +108,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("set_game_rounds", (data, room) => {
-    console.log("this is the rounds set to the backend", data);
     socket.to(room).emit("recieve_game_rounds", data);
     io.to(room).emit("recieve_game_rounds", data);
   });
+
+  // socket.on("set_current_round", (data, room) => {
+  //   socket.to(room).emit("recieve_current_round", data);
+  //   io.to(room).emit("recieve_current_round", data);
+  // });
 
   socket.on("end_game", (room) => {
     rooms = rooms.filter((obj) => obj.roomNumber == room);
@@ -176,7 +180,6 @@ io.on("connection", (socket) => {
   socket.on("send_correct_player", (player, room) => {
     correctPlayer = player;
     io.to(room).emit("receive_correct_player", correctPlayer);
-    console.log(correctPlayer);
   });
 
   socket.on("disconnect", () => {

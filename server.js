@@ -45,12 +45,12 @@ const io = new Server(server, {
 });
 
 const users = [];
+let rooms = [];
 let usersInCurrentRoom;
 let currentRoom;
+let count = 0;
 
 io.on("connection", (socket) => {
-  console.log("user conneted", socket.id);
-
   const getUsersInRoom = (room) => {
     return users.filter((user) => user.room === room);
   };
@@ -59,14 +59,66 @@ io.on("connection", (socket) => {
     return users.filter((user) => user.room === room && user.id !== id);
   };
 
-  socket.on("send_message", (data, room) => {
-    console.log(room);
-    socket.to(room).emit("recieved_message", data, socket.id);
-    console.log(data);
+  socket.on("join_room", (player, room) => {
+    users.push(player);
+    player.id = socket.id;
+    currentRoom = room;
+    usersInCurrentRoom = getUsersInRoom(currentRoom);
+
+    io.to(room).emit("player_data", player);
+
+    usersInCurrentRoom.forEach((element, i) => {
+      if (i >= 1) {
+        element.host = false;
+      }
+    });
+
+    if (!rooms.find((obj) => obj.roomNumber == room)) {
+      rooms.push({
+        roomNumber: room,
+        players: usersInCurrentRoom,
+        gameState: false,
+      });
+    }
+
+    for (let i = rooms.length - 1; i >= 0; i--) {
+      if (rooms[i].gameState == false) {
+        if (usersInCurrentRoom.length <= 4) {
+          socket.join(room);
+          io.to(room).emit("room_data", usersInCurrentRoom);
+          socket.emit("accept_connection");
+          return;
+        } else {
+          socket.emit("refuse_connection");
+        }
+      }
+
+      if (rooms[i].gameState == true) {
+        socket.emit("refuse_connection");
+      }
+    }
   });
 
-  socket.on("set_all_other_turns_false", (room) => {
-    socket.broadcast.to(room).emit("make_all_other_turns_false");
+  socket.on("start_game", (room) => {
+    rooms = rooms.filter((obj) => obj.roomNumber == room);
+    rooms.forEach((room) => (room.gameState = true));
+    socket.to(room).emit("redirect_start_game", room);
+  });
+
+  socket.on("send_message", (data, room) => {
+    socket.to(room).emit("recieved_message", data, socket.id);
+  });
+
+  socket.on("set_user_points", (room, data) => {
+    let userToGainPoints = usersInCurrentRoom.find((user) => user.id == data);
+    userToGainPoints.points += 100;
+    io.to(room).emit("room_data", usersInCurrentRoom);
+    io.to(room).emit("reset_round");
+  });
+
+  socket.on("generate_random_word", (word, room) => {
+    console.log(word);
+    io.to(room).emit("received_word_to_guess", word);
   });
 
   socket.on("send_canvas", (data, room) => {
@@ -78,26 +130,31 @@ io.on("connection", (socket) => {
     socket.to(room).emit("refreshed_canvas", data);
   });
 
-  socket.on("join_room", (player, room) => {
-    socket.join(room);
-    users.push(player);
-    player.id = socket.id;
+  socket.on("send_time_up", (room) => {
     currentRoom = room;
     usersInCurrentRoom = getUsersInRoom(currentRoom);
-    io.to(room).emit("room_data", usersInCurrentRoom);
-  });
+    usersInCurrentRoom.forEach((user, i) => {
+      if (i === count) {
+        user.active = true;
+      } else {
+        user.active = false;
+      }
+    });
 
-  socket.on("start_game", (room) => {
-    socket.to(room).emit("redirect_start_game");
+    if (count < usersInCurrentRoom.length - 1) {
+      count++;
+    } else {
+      count = 0;
+    }
+    io.to(room).emit("receive_time_up", usersInCurrentRoom);
+    socket.to(room).emit("make_all_other_turns_false");
   });
 
   socket.on("disconnect", () => {
     usersAfterDisconnect = getUsersAfterDisconnect(currentRoom, socket.id);
-    console.log("Users after disc:", usersAfterDisconnect);
-    io.to(currentRoom).emit("room_data", usersAfterDisconnect);
   });
 });
 
 server.listen(PORT, () => {
-  console.log("Connected to db & listening at port " + PORT);
+  console.log("Connected! Listening On Port: " + PORT);
 });

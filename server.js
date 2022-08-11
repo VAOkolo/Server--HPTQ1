@@ -49,6 +49,7 @@ let rooms = [];
 let usersInCurrentRoom;
 let currentRoom;
 let count = 0;
+let correctPlayer = ""
 
 io.on("connection", (socket) => {
   const getUsersInRoom = (room) => {
@@ -148,6 +149,12 @@ io.on("connection", (socket) => {
     }
     io.to(room).emit("receive_time_up", usersInCurrentRoom);
     socket.to(room).emit("make_all_other_turns_false");
+  });
+
+  socket.on("send_correct_player", (player, room) => {
+    correctPlayer = player
+    io.to(room).emit("receive_correct_player", correctPlayer);
+    console.log(correctPlayer)
   });
 
   socket.on("disconnect", () => {

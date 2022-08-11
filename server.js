@@ -46,6 +46,7 @@ let rooms = [];
 let usersInCurrentRoom;
 let currentRoom;
 let count = 0;
+let correctPlayer = "";
 
 io.on("connection", (socket) => {
   const getUsersInRoom = (room) => {
@@ -56,13 +57,17 @@ io.on("connection", (socket) => {
     return users.filter((user) => user.room === room && user.id !== id);
   };
 
+  const selectRandomWord = (arr) => {
+    return arr[Math.floor(Math.random() * arr.length)];
+  };
+
   socket.on("join_room", (player, room) => {
     users.push(player);
     player.id = socket.id;
     currentRoom = room;
     usersInCurrentRoom = getUsersInRoom(currentRoom);
 
-    io.to(room).emit("player_data", player);
+    io.to(socket.id).emit("initial_room_data", player);
 
     usersInCurrentRoom.forEach((element, i) => {
       if (i >= 1) {
@@ -102,6 +107,12 @@ io.on("connection", (socket) => {
     socket.to(room).emit("redirect_start_game", room);
   });
 
+  socket.on("end_game", (room) => {
+    rooms = rooms.filter((obj) => obj.roomNumber == room);
+    rooms.forEach((room) => (room.gameState = true));
+    io.to(room).emit("redirect_end_game", room);
+  });
+
   socket.on("send_message", (data, room) => {
     socket.to(room).emit("recieved_message", data, socket.id);
   });
@@ -113,8 +124,19 @@ io.on("connection", (socket) => {
     io.to(room).emit("reset_round");
   });
 
-  socket.on("generate_random_word", (word, room) => {
-    console.log(word);
+  // socket.on("generate_random_word", (word, room) => {
+  //   console.log(word);
+  //   io.to(room).emit("received_word_to_guess", word);
+  // });
+
+  socket.on("generate_words_array", (findTheWord, room) => {
+    console.log("Im being called!!!");
+    console.log("This Is The Array Of Words Sent To Server:", findTheWord);
+    const word = selectRandomWord(findTheWord);
+    if (word == undefined || word.length < 0) {
+      return;
+    }
+    console.log("This Is The Word Sent Back To Client:", word);
     io.to(room).emit("received_word_to_guess", word);
   });
 
@@ -145,6 +167,12 @@ io.on("connection", (socket) => {
     }
     io.to(room).emit("receive_time_up", usersInCurrentRoom);
     socket.to(room).emit("make_all_other_turns_false");
+  });
+
+  socket.on("send_correct_player", (player, room) => {
+    correctPlayer = player;
+    io.to(room).emit("receive_correct_player", correctPlayer);
+    console.log(correctPlayer);
   });
 
   socket.on("disconnect", () => {

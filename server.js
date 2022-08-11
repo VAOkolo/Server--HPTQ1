@@ -60,6 +60,10 @@ io.on("connection", (socket) => {
     return users.filter((user) => user.room === room && user.id !== id);
   };
 
+  const selectRandomWord = (arr) => {
+    return arr[Math.floor(Math.random() * arr.length)];
+  };
+
   socket.on("join_room", (player, room) => {
     users.push(player);
     player.id = socket.id;
@@ -117,7 +121,15 @@ io.on("connection", (socket) => {
     io.to(room).emit("reset_round");
   });
 
-  socket.on("generate_random_word", (word, room) => {
+  // socket.on("generate_random_word", (word, room) => {
+  //   console.log(word);
+  //   io.to(room).emit("received_word_to_guess", word);
+  // });
+
+  socket.on("generate_words_array", (findTheWord, room) => {
+    console.log("im being called");
+    console.log(findTheWord);
+    const word = selectRandomWord(findTheWord);
     console.log(word);
     io.to(room).emit("received_word_to_guess", word);
   });

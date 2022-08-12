@@ -23,19 +23,16 @@ app.get("/", (req, res) => {
   res.send("HPTQ API");
 });
 
-// mongoose
-//   .connect(process.env.MONG_URI)
-//   // .then(() => {
-//   //     seedDB()
-//   // })
-//   .then(() => {
-//     server.listen(PORT, () => {
-//       console.log("Connected to db & listening at port " + PORT);
-//     });
-//   })
-//   .catch((error) => {
-//     console.log(error);
-//   });
+mongoose
+  .connect(process.env.MONG_URI)
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log("Connected to db & listening at port " + PORT);
+    });
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 
 const io = new Server(server, {
   cors: {
@@ -110,6 +107,11 @@ io.on("connection", (socket) => {
     socket.to(room).emit("redirect_start_game", room);
   });
 
+  socket.on("set_game_rounds", (data, room) => {
+    socket.to(room).emit("recieve_game_rounds", data);
+    io.to(room).emit("recieve_game_rounds", data);
+  });
+
   socket.on("end_game", (room) => {
     rooms = rooms.filter((obj) => obj.roomNumber == room);
     rooms.forEach((room) => (room.gameState = true));
@@ -127,19 +129,12 @@ io.on("connection", (socket) => {
     io.to(room).emit("reset_round");
   });
 
-  // socket.on("generate_random_word", (word, room) => {
-  //   console.log(word);
-  //   io.to(room).emit("received_word_to_guess", word);
-  // });
-
   socket.on("generate_words_array", (findTheWord, room) => {
-    console.log("Im being called!!!");
-    console.log("This Is The Array Of Words Sent To Server:", findTheWord);
     const word = selectRandomWord(findTheWord);
     if (word == undefined || word.length < 0) {
       return;
     }
-    console.log("This Is The Word Sent Back To Client:", word);
+
     io.to(room).emit("received_word_to_guess", word);
   });
 
@@ -175,7 +170,6 @@ io.on("connection", (socket) => {
   socket.on("send_correct_player", (player, room) => {
     correctPlayer = player;
     io.to(room).emit("receive_correct_player", correctPlayer);
-    console.log(correctPlayer);
   });
 
   socket.on("disconnect", () => {
@@ -183,6 +177,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log("Connected! Listening On Port: " + PORT);
-});
+// server.listen(PORT, () => {
+//   console.log("Connected! Listening On Port: " + PORT);
+// });

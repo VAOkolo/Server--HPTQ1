@@ -112,11 +112,6 @@ io.on("connection", (socket) => {
     io.to(room).emit("recieve_game_rounds", data);
   });
 
-  // socket.on("set_current_round", (data, room) => {
-  //   socket.to(room).emit("recieve_current_round", data);
-  //   io.to(room).emit("recieve_current_round", data);
-  // });
-
   socket.on("end_game", (room) => {
     rooms = rooms.filter((obj) => obj.roomNumber == room);
     rooms.forEach((room) => (room.gameState = true));
@@ -133,11 +128,6 @@ io.on("connection", (socket) => {
     io.to(room).emit("room_data", usersInCurrentRoom);
     io.to(room).emit("reset_round");
   });
-
-  // socket.on("generate_random_word", (word, room) => {
-  //   console.log(word);
-  //   io.to(room).emit("received_word_to_guess", word);
-  // });
 
   socket.on("generate_words_array", (findTheWord, room) => {
     const word = selectRandomWord(findTheWord);

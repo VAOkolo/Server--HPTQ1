@@ -23,16 +23,16 @@ app.get("/", (req, res) => {
   res.send("HPTQ API");
 });
 
-// mongoose
-//   .connect(process.env.MONG_URI)
-//   .then(() => {
-//     server.listen(PORT, () => {
-//       console.log("Connected to db & listening at port " + PORT);
-//     });
-//   })
-//   .catch((error) => {
-//     console.log(error);
-//   });
+mongoose
+  .connect(process.env.MONG_URI)
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log("Connected to db & listening at port " + PORT);
+    });
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 
 const io = new Server(server, {
   cors: {
@@ -128,6 +128,11 @@ io.on("connection", (socket) => {
     io.to(room).emit("recieve_game_rounds", data);
   });
 
+  socket.on("set_game_seconds", (data, room) => {
+    socket.to(room).emit("recieve_game_seconds", data);
+    io.to(room).emit("recieve_game_seconds", data);
+  });
+
   socket.on("end_game", (room) => {
     rooms = rooms.filter((obj) => obj.roomNumber == room);
     rooms.forEach((room) => (room.gameState = true));
@@ -193,6 +198,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log("Connected! Listening On Port: " + PORT);
-});
+// server.listen(PORT, () => {
+//   console.log("Connected! Listening On Port: " + PORT);
+// });

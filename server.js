@@ -49,6 +49,7 @@ let count = 0;
 let host = "";
 
 let correctPlayer = "";
+let userRemoved = false;
 
 io.on("connection", (socket) => {
   const getUsersInRoom = (room) => {
@@ -103,6 +104,21 @@ io.on("connection", (socket) => {
     }
   });
 
+  // socket.on("remove_from_room", (id, room) => {
+  //   socket.leave(room);
+  //   if (userRemoved) {
+  //     return;
+  //   }
+  //   const indexOfUser = usersInCurrentRoom.findIndex((user) => user.id == id);
+  //   usersInCurrentRoom.splice(indexOfUser, 1);
+  //   userRemoved = true;
+  //   io.to(room).emit("room_data", usersInCurrentRoom);
+  // });
+
+  // socket.on("delete_room", (room) => {
+  //   io.in(room).socketsLeave(room);
+  // });
+
   socket.on("start_game", (room) => {
     rooms = rooms.filter((obj) => obj.roomNumber == room);
     rooms.forEach((room) => (room.gameState = true));
@@ -112,6 +128,11 @@ io.on("connection", (socket) => {
   socket.on("set_game_rounds", (data, room) => {
     socket.to(room).emit("recieve_game_rounds", data);
     io.to(room).emit("recieve_game_rounds", data);
+  });
+
+  socket.on("set_game_seconds", (data, room) => {
+    socket.to(room).emit("recieve_game_seconds", data);
+    io.to(room).emit("recieve_game_seconds", data);
   });
 
   socket.on("end_game", (room) => {
